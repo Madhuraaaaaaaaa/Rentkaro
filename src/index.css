@@ -1114,6 +1114,12 @@
     --tw-gradient-stops: var(--tw-gradient-via-stops, var(--tw-gradient-position), var(--tw-gradient-from) var(--tw-gradient-from-position), var(--tw-gradient-to) var(--tw-gradient-to-position));
   }
 
+  /* Soften gradients in dark mode */
+  .dark .from-blue-600 { --tw-gradient-from: color-mix(in oklab, var(--color-blue-600) 85%, #0000); }
+  .dark .to-emerald-600 { --tw-gradient-to: color-mix(in oklab, var(--color-emerald-600) 85%, #0000); }
+  .dark .from-blue-700 { --tw-gradient-from: color-mix(in oklab, var(--color-blue-700) 85%, #0000); }
+  .dark .to-emerald-700 { --tw-gradient-to: color-mix(in oklab, var(--color-emerald-700) 85%, #0000); }
+
   .fill-current {
     fill: currentColor;
   }
@@ -2587,4 +2593,32 @@ html {
     opacity: var(--tw-exit-opacity, 1);
     transform: translate3d(var(--tw-exit-translate-x, 0), var(--tw-exit-translate-y, 0), 0) scale3d(var(--tw-exit-scale, 1), var(--tw-exit-scale, 1), var(--tw-exit-scale, 1)) rotate(var(--tw-exit-rotate, 0));
   }
+}
+
+/* Dark theme refinement and smooth theme transitions */
+.theme-anim *, .theme-anim *::before, .theme-anim *::after {
+  transition: background-color .25s ease, color .25s ease, border-color .25s ease, fill .25s ease, stroke .25s ease;
+}
+@media (prefers-reduced-motion: reduce) {
+  .theme-anim *, .theme-anim *::before, .theme-anim *::after { transition: none !important; }
+}
+
+.dark {
+  --background: oklch(.17 0 0);
+  --foreground: oklch(.98 0 0);
+  --card: oklch(.18 0 0);
+  --card-foreground: oklch(.98 0 0);
+  --popover: oklch(.18 0 0);
+  --popover-foreground: oklch(.98 0 0);
+  --primary: oklch(.9 0 0);
+  --primary-foreground: oklch(.22 0 0);
+  --secondary: oklch(.22 0 0);
+  --secondary-foreground: oklch(.96 0 0);
+  --muted: oklch(.22 0 0);
+  --muted-foreground: oklch(.8 0 0);
+  --accent: oklch(.26 0 0);
+  --accent-foreground: oklch(.98 0 0);
+  --border: oklch(.28 0 0);
+  --input: oklch(.26 0 0);
+  --ring: oklch(.5 0 0);
 }

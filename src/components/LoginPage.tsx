@@ -3,6 +3,8 @@ import { Button } from './ui/button';
 import { Input } from './ui/input';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from './ui/card';
 import { Label } from './ui/label';
+import { AuthApi } from '../utils/api';
+import { toast } from 'sonner';
 
 type Page = 'home' | 'items' | 'dashboard' | 'login' | 'signup';
 
@@ -42,19 +44,14 @@ export function LoginPage({ onNavigate, onSuccess }: LoginPageProps) {
 
     try {
       setLoading(true);
-      const res = await fetch('http://localhost:4000/api/login', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ email, password })
-      });
-      const data = await res.json();
-      if (!res.ok) {
-        setErrors({ api: data?.error || 'Login failed' });
+      const result = await AuthApi.login(email, password);
+      if (!result.ok || !result.data?.token) {
+        setErrors({ api: result.error || 'Login failed' });
+        toast.error(result.error || 'Login failed');
         return;
       }
-      if (data?.token) {
-        try { localStorage.setItem('auth_token', data.token); } catch {}
-      }
+      try { localStorage.setItem('auth_token', result.data.token); } catch {}
+      toast.success('Signed in successfully');
       onSuccess();
     } catch (err) {
       setErrors({ api: 'Network error. Please try again.' });
@@ -86,9 +83,11 @@ export function LoginPage({ onNavigate, onSuccess }: LoginPageProps) {
                   placeholder="Enter your email"
                   value={email}
                   onChange={(e) => setEmail(e.target.value)}
+                  aria-invalid={!!errors.email}
+                  aria-describedby={errors.email ? 'email-error' : undefined}
                 />
                 {errors.email && (
-                  <p className="text-sm text-red-600">{errors.email}</p>
+                  <p id="email-error" className="text-sm text-red-600">{errors.email}</p>
                 )}
               </div>
               
@@ -100,9 +99,11 @@ export function LoginPage({ onNavigate, onSuccess }: LoginPageProps) {
                   placeholder="Enter your password"
                   value={password}
                   onChange={(e) => setPassword(e.target.value)}
+                  aria-invalid={!!errors.password}
+                  aria-describedby={errors.password ? 'password-error' : undefined}
                 />
                 {errors.password && (
-                  <p className="text-sm text-red-600">{errors.password}</p>
+                  <p id="password-error" className="text-sm text-red-600">{errors.password}</p>
                 )}
               </div>
               

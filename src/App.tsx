@@ -11,8 +11,11 @@ import { LendPage } from './components/LendPage';
 import { CartPage } from './components/CartPage';
 import { RentalProgressPage } from './components/RentalProgressPage';
 import { mockItems } from './components/mockData';
+import { Toaster } from 'sonner';
+import { ProfilePage } from './components/ProfilePage';
+import { SettingsPage } from './components/SettingsPage';
 
-type Page = 'home' | 'items' | 'dashboard' | 'login' | 'signup' | 'itemDetails' | 'lend' | 'rentalProgress' | 'cart';
+type Page = 'home' | 'items' | 'dashboard' | 'login' | 'signup' | 'itemDetails' | 'lend' | 'rentalProgress' | 'cart' | 'profile' | 'settings';
 
 export default function App() {
   const [currentPage, setCurrentPage] = useState<Page>('home');
@@ -26,6 +29,31 @@ export default function App() {
       const token = localStorage.getItem('auth_token');
       if (token) setIsLoggedIn(true);
     } catch {}
+    // Apply saved theme and sync with OS when set to system
+    const applyTheme = () => {
+      let pref: string | null = null;
+      try { pref = localStorage.getItem('theme'); } catch {}
+      const mql = window.matchMedia('(prefers-color-scheme: dark)');
+      const shouldDark = pref === 'dark' || (pref === 'system' || !pref) && mql.matches;
+      document.documentElement.classList.toggle('dark', !!shouldDark);
+      return mql;
+    };
+    const mql = applyTheme();
+    const onOsTheme = () => {
+      let pref: string | null = null;
+      try { pref = localStorage.getItem('theme'); } catch {}
+      if (pref === 'system' || !pref) applyTheme();
+    };
+    try { mql.addEventListener('change', onOsTheme); } catch { mql.addListener(onOsTheme); }
+    const onLogout = () => {
+      setIsLoggedIn(false);
+      setCurrentPage('home');
+    };
+    window.addEventListener('auth-logout', onLogout as EventListener);
+    return () => {
+      window.removeEventListener('auth-logout', onLogout as EventListener);
+      try { mql.removeEventListener('change', onOsTheme); } catch { mql.removeListener(onOsTheme); }
+    };
   }, []);
 
   const handleSuccessfulAuth = () => {
@@ -53,6 +81,10 @@ export default function App() {
           if (p === 'rentalProgress') { setSelectedRentalId('mock'); }
           setCurrentPage(p);
         }} />;
+      case 'profile':
+        return <ProfilePage />;
+      case 'settings':
+        return <SettingsPage />;
       case 'login':
         return <LoginPage onNavigate={setCurrentPage} onSuccess={handleSuccessfulAuth} />;
       case 'signup':
@@ -63,7 +95,7 @@ export default function App() {
   };
 
   return (
-    <div className="min-h-screen bg-background">
+    <div className="min-h-screen bg-background theme-anim">
       <Header 
         currentPage={currentPage} 
         onNavigate={setCurrentPage} 
@@ -71,11 +103,13 @@ export default function App() {
         onLogout={() => {
           setIsLoggedIn(false);
           setCurrentPage('home');
+          try { localStorage.removeItem('auth_token'); } catch {}
         }}
       />
       <main>
         {renderPage()}
       </main>
+      <Toaster richColors position="top-right" />
       <Footer />
     </div>
   );

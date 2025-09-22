@@ -1,7 +1,7 @@
 import React from 'react';
 import { Button } from './ui/button';
 
-type Page = 'home' | 'items' | 'dashboard' | 'login' | 'signup' | 'lend' | 'cart';
+type Page = 'home' | 'items' | 'dashboard' | 'login' | 'signup' | 'lend' | 'cart' | 'profile' | 'settings';
 
 interface HeaderProps {
   currentPage: Page;
@@ -20,6 +20,9 @@ export function Header({ currentPage, onNavigate, isLoggedIn, onLogout }: Header
     window.addEventListener('cart-updated', update);
     return () => window.removeEventListener('cart-updated', update);
   }, []);
+  const linkBase = 'transition-colors outline-none focus-visible:ring-[3px] focus-visible:ring-ring/50 rounded-md px-2 py-1';
+  const activeClass = 'text-emerald-600 underline-offset-4';
+  const inactiveClass = 'text-muted-foreground hover:text-emerald-600';
   return (
     <header className="sticky top-0 z-50 w-full border-b bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/60">
       <div className="container max-w-7xl mx-auto flex h-16 items-center justify-between px-4">
@@ -34,33 +37,25 @@ export function Header({ currentPage, onNavigate, isLoggedIn, onLogout }: Header
           <nav className="hidden md:flex items-center space-x-6">
             <button
               onClick={() => onNavigate('home')}
-              className={`transition-colors hover:text-emerald-600 ${
-                currentPage === 'home' ? 'text-emerald-600' : 'text-muted-foreground'
-              }`}
+              className={`${linkBase} ${currentPage === 'home' ? activeClass : inactiveClass}`}
             >
               Home
             </button>
             <button
               onClick={() => onNavigate('items')}
-              className={`transition-colors hover:text-emerald-600 ${
-                currentPage === 'items' ? 'text-emerald-600' : 'text-muted-foreground'
-              }`}
+              className={`${linkBase} ${currentPage === 'items' ? activeClass : inactiveClass}`}
             >
               Browse Items
             </button>
             <button
               onClick={() => (isLoggedIn ? onNavigate('lend') : onNavigate('login'))}
-              className={`transition-colors hover:text-emerald-600 ${
-                currentPage === 'lend' ? 'text-emerald-600' : 'text-muted-foreground'
-              }`}
+              className={`${linkBase} ${currentPage === 'lend' ? activeClass : inactiveClass}`}
             >
               Lend
             </button>
             <button
               onClick={() => onNavigate('cart')}
-              className={`transition-colors hover:text-emerald-600 relative ${
-                currentPage === 'cart' ? 'text-emerald-600' : 'text-muted-foreground'
-              }`}
+              className={`${linkBase} relative ${currentPage === 'cart' ? activeClass : inactiveClass}`}
             >
               Cart
               {cartCount > 0 && (
@@ -70,9 +65,7 @@ export function Header({ currentPage, onNavigate, isLoggedIn, onLogout }: Header
             {isLoggedIn && (
               <button
                 onClick={() => onNavigate('dashboard')}
-                className={`transition-colors hover:text-emerald-600 ${
-                  currentPage === 'dashboard' ? 'text-emerald-600' : 'text-muted-foreground'
-                }`}
+                className={`${linkBase} ${currentPage === 'dashboard' ? activeClass : inactiveClass}`}
               >
                 My Dashboard
               </button>
@@ -94,9 +87,13 @@ export function Header({ currentPage, onNavigate, isLoggedIn, onLogout }: Header
               </Button>
             </>
           ) : (
-            <Button variant="outline" onClick={onLogout}>
-              Logout
-            </Button>
+            <div className="flex items-center space-x-2">
+              <button onClick={() => onNavigate('profile')} className={`${linkBase} ${currentPage === 'profile' ? activeClass : inactiveClass}`}>Profile</button>
+              <button onClick={() => onNavigate('settings')} className={`${linkBase} ${currentPage === 'settings' ? activeClass : inactiveClass}`}>Settings</button>
+              <Button variant="outline" onClick={onLogout}>
+                Logout
+              </Button>
+            </div>
           )}
         </div>
       </div>

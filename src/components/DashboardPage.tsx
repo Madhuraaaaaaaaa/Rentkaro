@@ -1,11 +1,13 @@
-import React, { useState } from 'react';
+import React, { useEffect, useState } from 'react';
 import { Button } from './ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from './ui/card';
 import { Badge } from './ui/badge';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from './ui/tabs';
 import { ImageWithFallback } from './figma/ImageWithFallback';
-import { mockMyItems, mockRentalHistory, type RentalItem, type RentalHistory } from './mockData';
+import { mockMyItems, type RentalItem, type RentalHistory } from './mockData';
 import { Star, MapPin, Phone, Plus, Edit, Trash2, Calendar, User } from 'lucide-react';
+import { UserApi } from '../utils/api';
+import { toast } from 'sonner';
 
 type Page = 'home' | 'items' | 'dashboard' | 'login' | 'signup' | 'rentalProgress';
 
@@ -15,6 +17,35 @@ interface DashboardPageProps {
 
 export function DashboardPage({ onNavigate }: DashboardPageProps) {
   const [myItems, setMyItems] = useState<RentalItem[]>(mockMyItems);
+  const [history, setHistory] = useState<RentalHistory[]>([]);
+  const [loading, setLoading] = useState(true);
+
+  useEffect(() => {
+    let isMounted = true;
+    (async () => {
+      setLoading(true);
+      const res = await UserApi.rentals();
+      if (!res.ok) {
+        toast.error(res.error || 'Failed to load rentals');
+        setLoading(false);
+        return;
+      }
+      if (!isMounted) return;
+      const mapped: RentalHistory[] = res.data?.rentals.map(r => ({
+        id: String(r.id),
+        itemName: r.itemId,
+        itemImage: '',
+        status: r.status,
+        type: (r.type as any) || 'Rented',
+        rentalDates: new Date(r.createdAt).toLocaleDateString(),
+        otherParty: 'Owner',
+        pricePerDay: 0,
+      })) || [];
+      setHistory(mapped);
+      setLoading(false);
+    })();
+    return () => { isMounted = false; };
+  }, []);
 
   const handleDeleteItem = (itemId: string) => {
     setMyItems(prev => prev.filter(item => item.id !== itemId));
@@ -81,7 +112,7 @@ export function DashboardPage({ onNavigate }: DashboardPageProps) {
         <div className="flex space-x-4">
           <div className="w-20 h-20 rounded-lg overflow-hidden flex-shrink-0">
             <ImageWithFallback
-              src={history.itemImage}
+              src={history.itemImage || 'https://via.placeholder.com/80x80?text=Item'}
               alt={history.itemName}
               className="w-full h-full object-cover"
             />
@@ -187,10 +218,16 @@ export function DashboardPage({ onNavigate }: DashboardPageProps) {
             <p className="text-muted-foreground">Track your past and ongoing rentals</p>
           </div>
 
-          {mockRentalHistory.length > 0 ? (
+          {loading ? (
             <div className="space-y-4">
-              {mockRentalHistory.map(history => (
-                <HistoryCard key={history.id} history={history} />
+              {Array.from({ length: 3 }).map((_, i) => (
+                <div key={i} className="animate-pulse h-24 bg-muted rounded-xl" />
+              ))}
+            </div>
+          ) : history.length > 0 ? (
+            <div className="space-y-4">
+              {history.map(h => (
+                <HistoryCard key={h.id} history={h} />
               ))}
             </div>
           ) : (

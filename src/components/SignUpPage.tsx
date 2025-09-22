@@ -3,6 +3,8 @@ import { Button } from './ui/button';
 import { Input } from './ui/input';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from './ui/card';
 import { Label } from './ui/label';
+import { AuthApi } from '../utils/api';
+import { toast } from 'sonner';
 
 type Page = 'home' | 'items' | 'dashboard' | 'login' | 'signup';
 
@@ -70,23 +72,18 @@ export function SignUpPage({ onNavigate, onSuccess }: SignUpPageProps) {
     if (Object.keys(newErrors).length > 0) return;
     try {
       setLoading(true);
-      const res = await fetch('http://localhost:4000/api/signup', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-          email: formData.email,
-          phone: formData.phoneNumber,
-          password: formData.password
-        })
+      const result = await AuthApi.signup({
+        email: formData.email,
+        phone: formData.phoneNumber,
+        password: formData.password,
       });
-      const data = await res.json();
-      if (!res.ok) {
-        setErrors({ api: data?.error || 'Signup failed' });
+      if (!result.ok || !result.data?.token) {
+        setErrors({ api: result.error || 'Signup failed' });
+        toast.error(result.error || 'Signup failed');
         return;
       }
-      if (data?.token) {
-        try { localStorage.setItem('auth_token', data.token); } catch {}
-      }
+      try { localStorage.setItem('auth_token', result.data.token); } catch {}
+      toast.success('Account created successfully');
       onSuccess();
     } catch {
       setErrors({ api: 'Network error. Please try again.' });
@@ -118,9 +115,11 @@ export function SignUpPage({ onNavigate, onSuccess }: SignUpPageProps) {
                   placeholder="Enter your full name"
                   value={formData.name}
                   onChange={(e) => handleInputChange('name', e.target.value)}
+                  aria-invalid={!!errors.name}
+                  aria-describedby={errors.name ? 'name-error' : undefined}
                 />
                 {errors.name && (
-                  <p className="text-sm text-red-600">{errors.name}</p>
+                  <p id="name-error" className="text-sm text-red-600">{errors.name}</p>
                 )}
               </div>
               
@@ -132,9 +131,11 @@ export function SignUpPage({ onNavigate, onSuccess }: SignUpPageProps) {
                   placeholder="Enter your email"
                   value={formData.email}
                   onChange={(e) => handleInputChange('email', e.target.value)}
+                  aria-invalid={!!errors.email}
+                  aria-describedby={errors.email ? 'signup-email-error' : undefined}
                 />
                 {errors.email && (
-                  <p className="text-sm text-red-600">{errors.email}</p>
+                  <p id="signup-email-error" className="text-sm text-red-600">{errors.email}</p>
                 )}
               </div>
               
@@ -146,9 +147,11 @@ export function SignUpPage({ onNavigate, onSuccess }: SignUpPageProps) {
                   placeholder="Create a password"
                   value={formData.password}
                   onChange={(e) => handleInputChange('password', e.target.value)}
+                  aria-invalid={!!errors.password}
+                  aria-describedby={errors.password ? 'signup-password-error' : undefined}
                 />
                 {errors.password && (
-                  <p className="text-sm text-red-600">{errors.password}</p>
+                  <p id="signup-password-error" className="text-sm text-red-600">{errors.password}</p>
                 )}
               </div>
               
@@ -159,9 +162,11 @@ export function SignUpPage({ onNavigate, onSuccess }: SignUpPageProps) {
                   type="date"
                   value={formData.dateOfBirth}
                   onChange={(e) => handleInputChange('dateOfBirth', e.target.value)}
+                  aria-invalid={!!errors.dateOfBirth}
+                  aria-describedby={errors.dateOfBirth ? 'dob-error' : undefined}
                 />
                 {errors.dateOfBirth && (
-                  <p className="text-sm text-red-600">{errors.dateOfBirth}</p>
+                  <p id="dob-error" className="text-sm text-red-600">{errors.dateOfBirth}</p>
                 )}
               </div>
               
@@ -173,9 +178,11 @@ export function SignUpPage({ onNavigate, onSuccess }: SignUpPageProps) {
                   placeholder="Enter your phone number"
                   value={formData.phoneNumber}
                   onChange={(e) => handleInputChange('phoneNumber', e.target.value)}
+                  aria-invalid={!!errors.phoneNumber}
+                  aria-describedby={errors.phoneNumber ? 'phone-error' : undefined}
                 />
                 {errors.phoneNumber && (
-                  <p className="text-sm text-red-600">{errors.phoneNumber}</p>
+                  <p id="phone-error" className="text-sm text-red-600">{errors.phoneNumber}</p>
                 )}
               </div>
               

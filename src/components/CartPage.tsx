@@ -2,6 +2,8 @@ import React, { useEffect, useMemo, useState } from 'react';
 import { Card, CardContent } from './ui/card';
 import { Button } from './ui/button';
 import { formatINR } from '../utils/format';
+import { UserApi } from '../utils/api';
+import { toast } from 'sonner';
 
 type Page = 'home' | 'items' | 'dashboard' | 'login' | 'signup' | 'lend' | 'cart' | 'itemDetails';
 
@@ -20,6 +22,25 @@ export function CartPage({ onNavigate }: CartPageProps) {
   const subtotal = cart.reduce((s, i) => s + (i.pricePerDayINR || 0), 0);
   const discount = coupon.trim().toUpperCase() === 'SAVE10' ? Math.round(subtotal * 0.1) : 0;
   const total = subtotal - discount;
+
+  const proceedToPay = async () => {
+    if (!cart.length) return;
+    const amount = total;
+    const payment = await UserApi.pay(amount);
+    if (!payment.ok) {
+      toast.error(payment.error || 'Payment failed');
+      return;
+    }
+    // Create rentals for each cart item
+    for (const item of cart) {
+      await UserApi.createRental({ itemId: String(item.id || item.name), type: 'Rented' });
+    }
+    toast.success('Order placed successfully');
+    const next: any[] = [];
+    setCart(next);
+    try { localStorage.setItem('cart', JSON.stringify(next)); } catch {}
+    window.dispatchEvent(new Event('cart-updated'));
+  };
 
   const remove = (idx: number) => {
     const next = cart.filter((_, i) => i !== idx);
@@ -69,7 +90,7 @@ export function CartPage({ onNavigate }: CartPageProps) {
                   <input className="border rounded-md px-3 py-2 flex-1" placeholder="Coupon code (e.g., SAVE10)" value={coupon} onChange={(e) => setCoupon(e.target.value)} />
                   <Button variant="outline" onClick={() => { /* coupon applied via derived state */ }}>Apply</Button>
                 </div>
-                <Button className="w-full bg-gradient-to-r from-blue-600 to-emerald-600 hover:from-blue-700 hover:to-emerald-700">Proceed to Pay</Button>
+                <Button onClick={proceedToPay} className="w-full bg-gradient-to-r from-blue-600 to-emerald-600 hover:from-blue-700 hover:to-emerald-700">Proceed to Pay</Button>
               </CardContent>
             </Card>
           </div>
