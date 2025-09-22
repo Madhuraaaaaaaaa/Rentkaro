@@ -6,20 +6,24 @@ import { Card, CardContent, CardHeader } from './ui/card';
 import { Badge } from './ui/badge';
 import { ImageWithFallback } from './figma/ImageWithFallback';
 import { mockItems, categories, type RentalItem } from './mockData';
+import { formatINR } from '../utils/format';
 import { Star, MapPin, Phone, Search } from 'lucide-react';
 
-type Page = 'home' | 'items' | 'dashboard' | 'login' | 'signup';
+type Page = 'home' | 'items' | 'dashboard' | 'login' | 'signup' | 'itemDetails';
 
 interface ItemsPageProps {
   onNavigate: (page: Page) => void;
+  onOpenItem: (id: string) => void;
+  items?: RentalItem[];
 }
 
-export function ItemsPage({ onNavigate }: ItemsPageProps) {
+export function ItemsPage({ onNavigate, onOpenItem, items }: ItemsPageProps) {
   const [searchTerm, setSearchTerm] = useState('');
   const [selectedCategory, setSelectedCategory] = useState('All Categories');
   const [priceFilter, setPriceFilter] = useState('All Prices');
 
-  const filteredItems = mockItems.filter(item => {
+  const source = items && items.length ? items : mockItems;
+  const filteredItems = source.filter(item => {
     const matchesSearch = item.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
                          item.description.toLowerCase().includes(searchTerm.toLowerCase());
     const matchesCategory = selectedCategory === 'All Categories' || item.category === selectedCategory;
@@ -33,14 +37,14 @@ export function ItemsPage({ onNavigate }: ItemsPageProps) {
   });
 
   const ItemCard = ({ item }: { item: RentalItem }) => (
-    <Card className="group hover:shadow-lg transition-all duration-300 border-0 shadow-md">
-      <div className="aspect-square overflow-hidden rounded-t-lg">
+    <Card className="group hover:shadow-lg transition-all duration-300 border-0 shadow-md flex flex-col h-full">
+      <button className="aspect-square overflow-hidden rounded-t-lg" onClick={() => onOpenItem(item.id)}>
         <ImageWithFallback
           src={item.image}
           alt={item.name}
           className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300"
         />
-      </div>
+      </button>
       <CardHeader className="pb-3">
         <div className="flex items-start justify-between">
           <h3 className="font-semibold text-lg line-clamp-2">{item.name}</h3>
@@ -53,11 +57,11 @@ export function ItemsPage({ onNavigate }: ItemsPageProps) {
           {item.category}
         </Badge>
       </CardHeader>
-      <CardContent className="space-y-4">
-        <div className="space-y-2">
+      <CardContent className="space-y-4 flex-1 flex flex-col">
+        <div className="space-y-2 flex-1">
           <div className="flex items-center justify-between">
             <span className="text-2xl font-bold text-emerald-600">
-              ${item.pricePerDay}
+              {formatINR(item.pricePerDay * 83)}
               <span className="text-sm font-normal text-muted-foreground">/day</span>
             </span>
             <span className="text-sm text-muted-foreground">{item.availableDates}</span>
@@ -75,7 +79,7 @@ export function ItemsPage({ onNavigate }: ItemsPageProps) {
           </div>
         </div>
         
-        <Button className="w-full bg-gradient-to-r from-blue-600 to-emerald-600 hover:from-blue-700 hover:to-emerald-700">
+        <Button className="w-full bg-gradient-to-r from-blue-600 to-emerald-600 hover:from-blue-700 hover:to-emerald-700 mt-auto" onClick={() => onOpenItem(item.id)}>
           Contact Owner
         </Button>
       </CardContent>
@@ -83,7 +87,7 @@ export function ItemsPage({ onNavigate }: ItemsPageProps) {
   );
 
   return (
-    <div className="container max-w-7xl mx-auto px-4 py-8">
+    <div className="container max-w-6xl mx-auto px-4 py-8">
       {/* Header */}
       <div className="space-y-6 mb-8">
         <div>
@@ -94,7 +98,7 @@ export function ItemsPage({ onNavigate }: ItemsPageProps) {
         </div>
 
         {/* Search and Filters */}
-        <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
+        <div className="grid grid-cols-1 md:grid-cols-4 gap-4 items-end">
           <div className="md:col-span-2 relative">
             <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-muted-foreground w-4 h-4" />
             <Input
@@ -143,7 +147,7 @@ export function ItemsPage({ onNavigate }: ItemsPageProps) {
 
       {/* Items Grid */}
       {filteredItems.length > 0 ? (
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
+        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
           {filteredItems.map(item => (
             <ItemCard key={item.id} item={item} />
           ))}

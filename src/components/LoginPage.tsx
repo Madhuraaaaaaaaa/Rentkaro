@@ -14,10 +14,12 @@ interface LoginPageProps {
 export function LoginPage({ onNavigate, onSuccess }: LoginPageProps) {
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
-  const [errors, setErrors] = useState<{ email?: string; password?: string }>({});
+  const [errors, setErrors] = useState<{ email?: string; password?: string; api?: string }>({});
+  const [loading, setLoading] = useState(false);
 
-  const handleSubmit = (e: React.FormEvent) => {
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
+    setErrors({});
     
     const newErrors: { email?: string; password?: string } = {};
     
@@ -33,10 +35,31 @@ export function LoginPage({ onNavigate, onSuccess }: LoginPageProps) {
       newErrors.password = 'Password must be at least 6 characters';
     }
     
-    setErrors(newErrors);
-    
-    if (Object.keys(newErrors).length === 0) {
+    if (Object.keys(newErrors).length > 0) {
+      setErrors(newErrors);
+      return;
+    }
+
+    try {
+      setLoading(true);
+      const res = await fetch('http://localhost:4000/api/login', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ email, password })
+      });
+      const data = await res.json();
+      if (!res.ok) {
+        setErrors({ api: data?.error || 'Login failed' });
+        return;
+      }
+      if (data?.token) {
+        try { localStorage.setItem('auth_token', data.token); } catch {}
+      }
       onSuccess();
+    } catch (err) {
+      setErrors({ api: 'Network error. Please try again.' });
+    } finally {
+      setLoading(false);
     }
   };
 
@@ -86,9 +109,13 @@ export function LoginPage({ onNavigate, onSuccess }: LoginPageProps) {
               <Button 
                 type="submit" 
                 className="w-full bg-gradient-to-r from-blue-600 to-emerald-600 hover:from-blue-700 hover:to-emerald-700"
+                disabled={loading}
               >
-                Sign In
+                {loading ? 'Signing In...' : 'Sign In'}
               </Button>
+              {errors.api && (
+                <p className="text-sm text-red-600 mt-2 text-center">{errors.api}</p>
+              )}
             </form>
             
             <div className="mt-6 text-center space-y-2">

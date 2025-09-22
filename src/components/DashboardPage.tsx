@@ -7,7 +7,7 @@ import { ImageWithFallback } from './figma/ImageWithFallback';
 import { mockMyItems, mockRentalHistory, type RentalItem, type RentalHistory } from './mockData';
 import { Star, MapPin, Phone, Plus, Edit, Trash2, Calendar, User } from 'lucide-react';
 
-type Page = 'home' | 'items' | 'dashboard' | 'login' | 'signup';
+type Page = 'home' | 'items' | 'dashboard' | 'login' | 'signup' | 'rentalProgress';
 
 interface DashboardPageProps {
   onNavigate: (page: Page) => void;
@@ -76,7 +76,7 @@ export function DashboardPage({ onNavigate }: DashboardPageProps) {
   );
 
   const HistoryCard = ({ history }: { history: RentalHistory }) => (
-    <Card className="border-0 shadow-md">
+    <Card className="border-0 shadow-md hover:shadow-lg transition-shadow cursor-pointer" onClick={() => onNavigate('rentalProgress')}>
       <CardContent className="p-4">
         <div className="flex space-x-4">
           <div className="w-20 h-20 rounded-lg overflow-hidden flex-shrink-0">
@@ -126,7 +126,7 @@ export function DashboardPage({ onNavigate }: DashboardPageProps) {
   );
 
   return (
-    <div className="container max-w-7xl mx-auto px-4 py-8">
+    <div className="container max-w-6xl mx-auto px-4 py-8">
       {/* Header */}
       <div className="space-y-6 mb-8">
         <div>

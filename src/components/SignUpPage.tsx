@@ -21,6 +21,7 @@ export function SignUpPage({ onNavigate, onSuccess }: SignUpPageProps) {
   });
   
   const [errors, setErrors] = useState<Record<string, string>>({});
+  const [loading, setLoading] = useState(false);
 
   const handleInputChange = (field: string, value: string) => {
     setFormData(prev => ({ ...prev, [field]: value }));
@@ -62,14 +63,35 @@ export function SignUpPage({ onNavigate, onSuccess }: SignUpPageProps) {
     return newErrors;
   };
 
-  const handleSubmit = (e: React.FormEvent) => {
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    
     const newErrors = validateForm();
     setErrors(newErrors);
-    
-    if (Object.keys(newErrors).length === 0) {
+    if (Object.keys(newErrors).length > 0) return;
+    try {
+      setLoading(true);
+      const res = await fetch('http://localhost:4000/api/signup', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          email: formData.email,
+          phone: formData.phoneNumber,
+          password: formData.password
+        })
+      });
+      const data = await res.json();
+      if (!res.ok) {
+        setErrors({ api: data?.error || 'Signup failed' });
+        return;
+      }
+      if (data?.token) {
+        try { localStorage.setItem('auth_token', data.token); } catch {}
+      }
       onSuccess();
+    } catch {
+      setErrors({ api: 'Network error. Please try again.' });
+    } finally {
+      setLoading(false);
     }
   };
 
@@ -160,9 +182,13 @@ export function SignUpPage({ onNavigate, onSuccess }: SignUpPageProps) {
               <Button 
                 type="submit" 
                 className="w-full bg-gradient-to-r from-blue-600 to-emerald-600 hover:from-blue-700 hover:to-emerald-700"
+                disabled={loading}
               >
-                Create Account
+                {loading ? 'Creating...' : 'Create Account'}
               </Button>
+              {errors.api && (
+                <p className="text-sm text-red-600 mt-2 text-center">{errors.api}</p>
+              )}
             </form>
             
             <div className="mt-6 text-center">

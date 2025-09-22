@@ -1,3 +1,19 @@
+:root{
+  --font-size: 18px;
+}
+
+@media (width <= 1366px){
+  :root{ --font-size: 18px; }
+}
+
+@media (width <= 1280px){
+  :root{ --font-size: 17px; }
+}
+
+@media (width <= 1152px){
+  :root{ --font-size: 16px; }
+}
+
 @custom-variant dark (&:is(.dark *));
 
 :root {

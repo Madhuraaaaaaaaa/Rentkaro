@@ -15,11 +15,11 @@ export function HomePage({ onNavigate }: HomePageProps) {
   return (
     <div className="space-y-20">
       {/* Hero Section */}
-      <section className="container max-w-7xl mx-auto px-4 pt-16 pb-20">
+      <section className="container max-w-5xl mx-auto px-4 pt-12 pb-16">
         <div className="grid lg:grid-cols-2 gap-12 items-center">
           <div className="space-y-8">
             <div className="space-y-4">
-              <h1 className="text-4xl lg:text-6xl font-bold text-slate-900 leading-tight">
+              <h1 className="text-5xl lg:text-6xl font-bold text-slate-900 leading-tight">
                 <span className="text-emerald-600">Rent</span> anything.{' '}
                 <span className="text-blue-600">Lend</span> anything.
               </h1>
@@ -138,8 +138,8 @@ export function HomePage({ onNavigate }: HomePageProps) {
             </Button>
             <Button 
               size="lg" 
-              variant="outline"
-              className="text-lg px-8 py-6 border-white text-white hover:bg-white/10"
+              variant="secondary"
+              className="text-lg px-8 py-6 bg-white text-slate-900 hover:bg-slate-100"
               onClick={() => onNavigate('items')}
             >
               Browse Items

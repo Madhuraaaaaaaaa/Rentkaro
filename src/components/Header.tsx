@@ -1,7 +1,7 @@
 import React from 'react';
 import { Button } from './ui/button';
 
-type Page = 'home' | 'items' | 'dashboard' | 'login' | 'signup';
+type Page = 'home' | 'items' | 'dashboard' | 'login' | 'signup' | 'lend' | 'cart';
 
 interface HeaderProps {
   currentPage: Page;
@@ -11,6 +11,15 @@ interface HeaderProps {
 }
 
 export function Header({ currentPage, onNavigate, isLoggedIn, onLogout }: HeaderProps) {
+  const [cartCount, setCartCount] = React.useState<number>(0);
+  React.useEffect(() => {
+    const update = () => {
+      try { setCartCount(JSON.parse(localStorage.getItem('cart') || '[]').length); } catch { setCartCount(0); }
+    };
+    update();
+    window.addEventListener('cart-updated', update);
+    return () => window.removeEventListener('cart-updated', update);
+  }, []);
   return (
     <header className="sticky top-0 z-50 w-full border-b bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/60">
       <div className="container max-w-7xl mx-auto flex h-16 items-center justify-between px-4">
@@ -38,6 +47,25 @@ export function Header({ currentPage, onNavigate, isLoggedIn, onLogout }: Header
               }`}
             >
               Browse Items
+            </button>
+            <button
+              onClick={() => (isLoggedIn ? onNavigate('lend') : onNavigate('login'))}
+              className={`transition-colors hover:text-emerald-600 ${
+                currentPage === 'lend' ? 'text-emerald-600' : 'text-muted-foreground'
+              }`}
+            >
+              Lend
+            </button>
+            <button
+              onClick={() => onNavigate('cart')}
+              className={`transition-colors hover:text-emerald-600 relative ${
+                currentPage === 'cart' ? 'text-emerald-600' : 'text-muted-foreground'
+              }`}
+            >
+              Cart
+              {cartCount > 0 && (
+                <span className="absolute -top-2 -right-3 bg-emerald-600 text-white text-xs rounded-full px-2 py-0.5">{cartCount}</span>
+              )}
             </button>
             {isLoggedIn && (
               <button
