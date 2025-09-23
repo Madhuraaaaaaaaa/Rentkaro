@@ -65,7 +65,10 @@ export const UserApi = {
     return apiFetch<{ history: Array<{ id: number; query: string | null; itemId: string | null; createdAt: string }> }>('/api/history');
   },
   rentals() {
-    return apiFetch<{ rentals: Array<{ id: number; itemId: string; status: 'Completed' | 'Ongoing'; createdAt: string; type?: 'Rented' | 'Lent' }> }>('/api/rentals');
+    return apiFetch<{ rentals: Array<{ id: number; itemId: string; status: 'Completed' | 'Ongoing'; createdAt: string; type?: 'Rented' | 'Lent'; paymentId?: string }> }>('/api/rentals');
+  },
+  rental(id: number) {
+    return apiFetch<{ rental: { id: number; itemId: string; status: 'Completed' | 'Ongoing'; createdAt: string; type?: 'Rented' | 'Lent'; paymentId?: string } }>(`/api/rentals/${id}`);
   },
   updateRental(payload: { id: number; status: 'Completed' | 'Ongoing' }) {
     return apiFetch('/api/rentals', { method: 'PATCH', body: payload });
@@ -75,6 +78,24 @@ export const UserApi = {
   },
   pay(amount: number) {
     return apiFetch<{ ok: boolean; paymentId: string }>('/api/pay', { method: 'POST', body: { amount } });
+  },
+};
+
+export const ItemsApi = {
+  list() {
+    return apiFetch<{ items: Array<{ id: number; name: string; image?: string; pricePerDay: number; category?: string; availableDates?: string; ownerContact?: string; ownerAddress?: string; description?: string; rating?: number }> }>('/api/items');
+  },
+  get(id: number) {
+    return apiFetch<{ item: { id: number; name: string; image?: string; pricePerDay: number; category?: string; availableDates?: string; ownerContact?: string; ownerAddress?: string; description?: string; rating?: number } }>(`/api/items/${id}`);
+  },
+  create(payload: { name: string; image?: string; pricePerDay: number; category?: string; availableDates?: string; ownerContact?: string; ownerAddress?: string; description?: string }) {
+    return apiFetch<{ id: number }>(`/api/items`, { method: 'POST', body: payload });
+  },
+  update(id: number, payload: Partial<{ name: string; image?: string; pricePerDay: number; category?: string; availableDates?: string; ownerContact?: string; ownerAddress?: string; description?: string }>) {
+    return apiFetch<{ ok: boolean }>(`/api/items/${id}`, { method: 'PATCH', body: payload });
+  },
+  delete(id: number) {
+    return apiFetch<{ ok: boolean }>(`/api/items/${id}`, { method: 'DELETE' });
   },
 };
 

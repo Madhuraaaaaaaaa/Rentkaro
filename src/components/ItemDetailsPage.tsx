@@ -1,4 +1,4 @@
-import React, { useMemo, useState } from 'react';
+import React, { useEffect, useMemo, useState } from 'react';
 import { Button } from './ui/button';
 import { Card, CardContent } from './ui/card';
 import { Badge } from './ui/badge';
@@ -6,6 +6,8 @@ import { ImageWithFallback } from './figma/ImageWithFallback';
 import { mockItems } from './mockData';
 import { CalendarDays, Clock, MapPin, Phone, Star, ArrowLeft } from 'lucide-react';
 import { formatINR } from '../utils/format';
+import { ItemsApi } from '../utils/api';
+import { toast } from 'sonner';
 
 type Page = 'home' | 'items' | 'dashboard' | 'login' | 'signup' | 'itemDetails';
 
@@ -16,7 +18,34 @@ interface ItemDetailsPageProps {
 }
 
 export function ItemDetailsPage({ itemId, onBack }: ItemDetailsPageProps) {
-  const item = useMemo(() => mockItems.find((i) => i.id === itemId) || mockItems[0], [itemId]);
+  const [serverItem, setServerItem] = useState<any | null>(null);
+  useEffect(() => {
+    (async () => {
+      if (!itemId) return;
+      const idNum = parseInt(String(itemId), 10);
+      if (!isNaN(idNum)) {
+        const res = await ItemsApi.get(idNum);
+        if (res.ok && res.data?.item) setServerItem(res.data.item);
+      }
+    })();
+  }, [itemId]);
+  const item = useMemo(() => {
+    if (serverItem) {
+      return {
+        id: String(serverItem.id),
+        name: serverItem.name,
+        image: serverItem.image || '',
+        pricePerDay: serverItem.pricePerDay,
+        category: serverItem.category || 'Misc',
+        availableDates: serverItem.availableDates || '',
+        ownerContact: serverItem.ownerContact || '',
+        ownerAddress: serverItem.ownerAddress || '',
+        description: serverItem.description || '',
+        rating: serverItem.rating || 5,
+      };
+    }
+    return mockItems.find((i) => i.id === itemId) || mockItems[0];
+  }, [serverItem, itemId]);
 
   const [selectedDate, setSelectedDate] = useState<string>('');
   const [selectedSlot, setSelectedSlot] = useState<string>('');
@@ -38,7 +67,7 @@ export function ItemDetailsPage({ itemId, onBack }: ItemDetailsPageProps) {
       <div className="grid md:grid-cols-2 gap-8 items-start">
         <div className="w-full">
           <div className="aspect-square rounded-2xl overflow-hidden shadow-lg">
-            <ImageWithFallback src={item.image} alt={item.name} className="w-full h-full object-cover" />
+            <ImageWithFallback src={item.image} alt={item.name} loading="lazy" className="w-full h-full object-cover" />
           </div>
         </div>
 
@@ -102,7 +131,7 @@ export function ItemDetailsPage({ itemId, onBack }: ItemDetailsPageProps) {
                 cart.push({ itemId: item.id, name: item.name, image: item.image, pricePerDayINR: item.pricePerDay * 83, date: selectedDate, slot: selectedSlot });
                 localStorage.setItem('cart', JSON.stringify(cart));
                 try { window.dispatchEvent(new Event('cart-updated')); } catch {}
-                alert('Added to cart');
+                toast.success('Added to cart');
               }}>
                 <Clock className="w-4 h-4 mr-2" /> Add to Cart
               </Button>

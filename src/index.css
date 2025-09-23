@@ -2595,6 +2595,19 @@ html {
   }
 }
 
+/* Ensure skip-link is visually hidden until focused (in case sr-only utility is unavailable) */
+.sr-only {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  padding: 0;
+  margin: -1px;
+  overflow: hidden;
+  clip: rect(0, 0, 0, 0);
+  white-space: nowrap;
+  border: 0;
+}
+
 /* Dark theme refinement and smooth theme transitions */
 .theme-anim *, .theme-anim *::before, .theme-anim *::after {
   transition: background-color .25s ease, color .25s ease, border-color .25s ease, fill .25s ease, stroke .25s ease;

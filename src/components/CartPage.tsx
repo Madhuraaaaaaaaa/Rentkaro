@@ -33,7 +33,7 @@ export function CartPage({ onNavigate }: CartPageProps) {
     }
     // Create rentals for each cart item
     for (const item of cart) {
-      await UserApi.createRental({ itemId: String(item.id || item.name), type: 'Rented' });
+      await UserApi.createRental({ itemId: String(item.id || item.name), type: 'Rented', paymentId: (payment.data as any)?.paymentId });
     }
     toast.success('Order placed successfully');
     const next: any[] = [];

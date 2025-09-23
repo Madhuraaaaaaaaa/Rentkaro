@@ -13,9 +13,10 @@ type Page = 'home' | 'items' | 'dashboard' | 'login' | 'signup' | 'rentalProgres
 
 interface DashboardPageProps {
   onNavigate: (page: Page) => void;
+  onOpenRental?: (id: string) => void;
 }
 
-export function DashboardPage({ onNavigate }: DashboardPageProps) {
+export function DashboardPage({ onNavigate, onOpenRental }: DashboardPageProps) {
   const [myItems, setMyItems] = useState<RentalItem[]>(mockMyItems);
   const [history, setHistory] = useState<RentalHistory[]>([]);
   const [loading, setLoading] = useState(true);
@@ -88,7 +89,10 @@ export function DashboardPage({ onNavigate }: DashboardPageProps) {
         </div>
         
         <div className="flex space-x-2">
-          <Button variant="outline" size="sm" className="flex-1">
+          <Button variant="outline" size="sm" className="flex-1" onClick={() => {
+            try { localStorage.setItem('edit_item_id', item.id); } catch {}
+            onNavigate('editItem' as any);
+          }}>
             <Edit className="w-4 h-4 mr-1" />
             Edit
           </Button>
@@ -107,7 +111,7 @@ export function DashboardPage({ onNavigate }: DashboardPageProps) {
   );
 
   const HistoryCard = ({ history }: { history: RentalHistory }) => (
-    <Card className="border-0 shadow-md hover:shadow-lg transition-shadow cursor-pointer" onClick={() => onNavigate('rentalProgress')}>
+    <Card className="border-0 shadow-md hover:shadow-lg transition-shadow cursor-pointer" onClick={() => { onOpenRental && onOpenRental(history.id); onNavigate('rentalProgress'); }}>
       <CardContent className="p-4">
         <div className="flex space-x-4">
           <div className="w-20 h-20 rounded-lg overflow-hidden flex-shrink-0">
@@ -148,6 +152,17 @@ export function DashboardPage({ onNavigate }: DashboardPageProps) {
               </div>
               <div className="flex items-center space-x-2">
                 <span className="font-medium">${history.pricePerDay}/day</span>
+                {history.status === 'Ongoing' && (
+                  <Button size="sm" variant="outline" onClick={(e) => {
+                    e.stopPropagation();
+                    // simple completion action
+                    UserApi.updateRental({ id: parseInt(history.id, 10), status: 'Completed' }).then((res) => {
+                      if (res.ok) {
+                        setHistory((prev) => prev.map((h) => h.id === history.id ? { ...h, status: 'Completed' } : h));
+                      }
+                    });
+                  }}>Mark as completed</Button>
+                )}
               </div>
             </div>
           </div>
@@ -182,7 +197,7 @@ export function DashboardPage({ onNavigate }: DashboardPageProps) {
               <h2 className="text-xl font-semibold">My Listed Items</h2>
               <p className="text-muted-foreground">Items you've listed for rent</p>
             </div>
-            <Button className="bg-gradient-to-r from-blue-600 to-emerald-600 hover:from-blue-700 hover:to-emerald-700">
+            <Button className="bg-gradient-to-r from-blue-600 to-emerald-600 hover:from-blue-700 hover:to-emerald-700" onClick={() => onNavigate('lend')}>
               <Plus className="w-4 h-4 mr-2" />
               Add New Item
             </Button>
@@ -203,7 +218,7 @@ export function DashboardPage({ onNavigate }: DashboardPageProps) {
               <p className="text-muted-foreground mb-6 max-w-md mx-auto">
                 Start earning by listing items you rarely use. It's easy and free to get started!
               </p>
-              <Button className="bg-gradient-to-r from-blue-600 to-emerald-600 hover:from-blue-700 hover:to-emerald-700">
+              <Button className="bg-gradient-to-r from-blue-600 to-emerald-600 hover:from-blue-700 hover:to-emerald-700" onClick={() => onNavigate('lend')}>
                 <Plus className="w-4 h-4 mr-2" />
                 List Your First Item
               </Button>

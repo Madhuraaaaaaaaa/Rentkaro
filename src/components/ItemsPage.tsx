@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useEffect, useState } from 'react';
 import { Button } from './ui/button';
 import { Input } from './ui/input';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from './ui/select';
@@ -8,6 +8,8 @@ import { ImageWithFallback } from './figma/ImageWithFallback';
 import { mockItems, categories, type RentalItem } from './mockData';
 import { formatINR } from '../utils/format';
 import { Star, MapPin, Phone, Search } from 'lucide-react';
+import { ItemsApi } from '../utils/api';
+import { toast } from 'sonner';
 
 type Page = 'home' | 'items' | 'dashboard' | 'login' | 'signup' | 'itemDetails';
 
@@ -22,7 +24,31 @@ export function ItemsPage({ onNavigate, onOpenItem, items }: ItemsPageProps) {
   const [selectedCategory, setSelectedCategory] = useState('All Categories');
   const [priceFilter, setPriceFilter] = useState('All Prices');
 
-  const source = items && items.length ? items : mockItems;
+  const [serverItems, setServerItems] = useState<RentalItem[] | null>(null);
+  useEffect(() => {
+    (async () => {
+      const res = await ItemsApi.list();
+      if (res.ok) {
+        const mapped = (res.data?.items || []).map((i) => ({
+          id: String(i.id),
+          name: i.name,
+          image: i.image || '',
+          pricePerDay: i.pricePerDay,
+          category: i.category || 'Misc',
+          availableDates: i.availableDates || '',
+          ownerContact: i.ownerContact || '',
+          ownerAddress: i.ownerAddress || '',
+          description: i.description || '',
+          rating: i.rating || 5,
+          ownerId: 'server'
+        }));
+        setServerItems(mapped);
+      } else {
+        toast.error(res.error || 'Failed to load items');
+      }
+    })();
+  }, []);
+  const source = items && items.length ? items : (serverItems ?? mockItems);
   const filteredItems = source.filter(item => {
     const matchesSearch = item.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
                          item.description.toLowerCase().includes(searchTerm.toLowerCase());
@@ -42,6 +68,7 @@ export function ItemsPage({ onNavigate, onOpenItem, items }: ItemsPageProps) {
         <ImageWithFallback
           src={item.image}
           alt={item.name}
+          loading="lazy"
           className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300"
         />
       </button>

@@ -34,7 +34,7 @@ export function Header({ currentPage, onNavigate, isLoggedIn, onLogout }: Header
             Rentkaro
           </button>
           
-          <nav className="hidden md:flex items-center space-x-6">
+          <nav className="hidden md:flex items-center space-x-6" aria-label="Primary">
             <button
               onClick={() => onNavigate('home')}
               className={`${linkBase} ${currentPage === 'home' ? activeClass : inactiveClass}`}

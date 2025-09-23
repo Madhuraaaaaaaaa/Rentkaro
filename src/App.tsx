@@ -14,8 +14,9 @@ import { mockItems } from './components/mockData';
 import { Toaster } from 'sonner';
 import { ProfilePage } from './components/ProfilePage';
 import { SettingsPage } from './components/SettingsPage';
+import { EditItemPage } from './components/EditItemPage';
 
-type Page = 'home' | 'items' | 'dashboard' | 'login' | 'signup' | 'itemDetails' | 'lend' | 'rentalProgress' | 'cart' | 'profile' | 'settings';
+type Page = 'home' | 'items' | 'dashboard' | 'login' | 'signup' | 'itemDetails' | 'lend' | 'rentalProgress' | 'cart' | 'profile' | 'settings' | 'editItem';
 
 export default function App() {
   const [currentPage, setCurrentPage] = useState<Page>('home');
@@ -76,11 +77,13 @@ export default function App() {
       case 'lend':
         if (!isLoggedIn) return <HomePage onNavigate={setCurrentPage} />;
         return <LendPage onBack={() => setCurrentPage('items')} onAddItem={(newItem) => { setItems((prev: any[]) => [newItem, ...prev]); setCurrentPage('items'); }} />;
+      case 'editItem':
+        if (!selectedItemId) return <HomePage onNavigate={setCurrentPage} />;
+        return <EditItemPage itemId={selectedItemId} onDone={(goTo) => setCurrentPage(goTo)} />;
       case 'dashboard':
         return <DashboardPage onNavigate={(p: Page) => {
-          if (p === 'rentalProgress') { setSelectedRentalId('mock'); }
           setCurrentPage(p);
-        }} />;
+        }} onOpenRental={(id) => setSelectedRentalId(id)} />;
       case 'profile':
         return <ProfilePage />;
       case 'settings':
@@ -106,8 +109,10 @@ export default function App() {
           try { localStorage.removeItem('auth_token'); } catch {}
         }}
       />
-      <main>
-        {renderPage()}
+      <main id="main" role="main">
+        {(!isLoggedIn && (currentPage === 'dashboard' || currentPage === 'profile' || currentPage === 'settings' || currentPage === 'lend' || currentPage === 'editItem')) ? (
+          <LoginPage onNavigate={setCurrentPage} onSuccess={handleSuccessfulAuth} />
+        ) : renderPage()}
       </main>
       <Toaster richColors position="top-right" />
       <Footer />

@@ -5,6 +5,8 @@ import { Input } from './ui/input';
 import { Textarea } from './ui/textarea';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from './ui/select';
 import { categories, type RentalItem } from './mockData';
+import { ItemsApi } from '../utils/api';
+import { toast } from 'sonner';
 
 interface LendPageProps {
   onBack: () => void;
@@ -22,12 +24,12 @@ export function LendPage({ onBack, onAddItem }: LendPageProps) {
     ownerAddress: '',
     description: ''
   });
+  const [imageMode, setImageMode] = useState<'url'|'upload'>('url');
 
   const isValid = form.name && form.image && form.pricePerDay && form.availableDates && form.ownerContact && form.ownerAddress;
 
-  const handleSubmit = () => {
-    const newItem: RentalItem = {
-      id: String(Date.now()),
+  const handleSubmit = async () => {
+    const payload = {
       name: form.name,
       image: form.image,
       pricePerDay: Number(form.pricePerDay),
@@ -36,9 +38,14 @@ export function LendPage({ onBack, onAddItem }: LendPageProps) {
       ownerContact: form.ownerContact,
       ownerAddress: form.ownerAddress,
       description: form.description,
-      rating: 5.0,
-      ownerId: 'you'
     };
+    const res = await ItemsApi.create(payload);
+    if (!res.ok) {
+      toast.error(res.error || 'Failed to create item');
+      return;
+    }
+    toast.success('Item listed successfully');
+    const newItem: RentalItem = { id: String(res.data?.id || Date.now()), rating: 5, ownerId: 'you', ...payload } as any;
     onAddItem(newItem);
   };
 
@@ -58,8 +65,22 @@ export function LendPage({ onBack, onAddItem }: LendPageProps) {
               <Input type="number" value={form.pricePerDay} onChange={(e) => setForm({ ...form, pricePerDay: e.target.value })} />
             </div>
             <div>
-              <label className="block text-sm font-medium mb-2">Image URL</label>
-              <Input value={form.image} onChange={(e) => setForm({ ...form, image: e.target.value })} placeholder="https://..." />
+              <label className="block text-sm font-medium mb-2">Image</label>
+              <div className="flex gap-2 mb-2">
+                <Button type="button" variant={imageMode==='url'?'default':'outline'} size="sm" onClick={() => setImageMode('url')}>Use URL</Button>
+                <Button type="button" variant={imageMode==='upload'?'default':'outline'} size="sm" onClick={() => setImageMode('upload')}>Upload</Button>
+              </div>
+              {imageMode === 'url' ? (
+                <Input value={form.image} onChange={(e) => setForm({ ...form, image: e.target.value })} placeholder="https://..." />
+              ) : (
+                <Input type="file" accept="image/*" onChange={async (e) => {
+                  const file = e.target.files?.[0];
+                  if (!file) return;
+                  const reader = new FileReader();
+                  reader.onload = () => setForm({ ...form, image: String(reader.result) });
+                  reader.readAsDataURL(file);
+                }} />
+              )}
             </div>
             <div>
               <label className="block text-sm font-medium mb-2">Category</label>
